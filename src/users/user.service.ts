@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
-import { nanoid } from 'nanoid';
 import { ClerkUserCreatedEvent } from 'src/types/clerk';
 import clerkClient from '@clerk/clerk-sdk-node';
 
@@ -15,7 +14,7 @@ export class UserService {
       data;
     const email = email_addresses?.[0]?.email_address;
     const user_name =
-      username == null ? this.generateUsername(email) : username;
+      username == null ? await this.generateUsername(email) : username;
 
     const existing = await this.userModel.findOne({ clerkId: id });
 
@@ -139,7 +138,8 @@ export class UserService {
     return { bio: updated.bio };
   }
 
-  private generateUsername(email: string): string {
+  private async generateUsername(email: string) {
+    const { nanoid } = await import('nanoid');
     const localPart = email.split('@')[0];
     const base = localPart.toLowerCase().replace(/[^a-z0-9]/g, '');
 

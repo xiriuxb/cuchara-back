@@ -16,6 +16,8 @@ import { FollowModule } from './follows/follow.module';
 import { FollowController } from './follows/follow.controller';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CommentModule } from './comment/comment.module';
+import { CommentController } from './comment/comment.controller';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { APP_GUARD } from '@nestjs/core';
     UserModule,
     FeedModule,
     FollowModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [
@@ -54,6 +57,7 @@ export class AppModule implements NestModule {
         RecipeController,
         UserController,
         FollowController,
+        CommentController,
       );
   }
 }

@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
 import { nanoid } from 'nanoid';
 import { ClerkUserCreatedEvent } from 'src/types/clerk';
+import clerkClient from '@clerk/clerk-sdk-node';
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,9 @@ export class UserService {
         lastName: last_name,
         imageUrl: image_url,
       });
+      await clerkClient.users.updateUser(id, {
+        username: user_name,
+      });
     }
   }
 
@@ -63,8 +67,67 @@ export class UserService {
     await this.userModel.deleteOne({ clerkId: id });
   }
 
+  private async getUserWithStats(matchQuery: any) {
+    const pipeline = [
+      // Match inicial
+      {
+        $match: matchQuery,
+      },
+      // Lookup para followers
+      {
+        $lookup: {
+          from: 'follows',
+          localField: '_id',
+          foreignField: 'following',
+          as: 'followers',
+        },
+      },
+      // Lookup para following
+      {
+        $lookup: {
+          from: 'follows',
+          localField: '_id',
+          foreignField: 'follower',
+          as: 'following',
+        },
+      },
+      // Lookup para recipes
+      {
+        $lookup: {
+          from: 'recipes',
+          localField: 'clerkId',
+          foreignField: 'createdBy',
+          as: 'recipes',
+        },
+      },
+      // Proyectar los campos necesarios con los conteos
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          email: 1,
+          firstName: 1,
+          lastName: 1,
+          imageUrl: 1,
+          bio: 1,
+          clerkId: 1,
+          followersCount: { $size: '$followers' },
+          followingCount: { $size: '$following' },
+          recipesCount: { $size: '$recipes' },
+        },
+      },
+    ];
+
+    const [user] = await this.userModel.aggregate(pipeline).exec();
+    return user;
+  }
+
   async getUserProfile(userClerkId: string) {
-    return await this.userModel.findOne({ clerkId: userClerkId });
+    return this.getUserWithStats({ clerkId: userClerkId });
+  }
+
+  async getUserData(username: string) {
+    return this.getUserWithStats({ username });
   }
 
   async updateBio(userClerkId: string, bio: string) {

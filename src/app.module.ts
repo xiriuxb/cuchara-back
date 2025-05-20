@@ -12,6 +12,8 @@ import { ClerkModule } from './clerk/clerk.module';
 import { UserModule } from './users/user.module';
 import { UserController } from './users/user.controller';
 import { FeedModule } from './feed/feed.module';
+import { FollowModule } from './follows/follow.module';
+import { FollowController } from './follows/follow.controller';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { FeedModule } from './feed/feed.module';
     ClerkModule,
     UserModule,
     FeedModule,
+    FollowModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -31,6 +34,12 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes('auth/*', 'ingredients/*', RecipeController, UserController);
+      .forRoutes(
+        'auth/*',
+        'ingredients/*',
+        RecipeController,
+        UserController,
+        FollowController,
+      );
   }
 }

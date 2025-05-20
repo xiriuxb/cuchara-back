@@ -129,18 +129,22 @@ export class RecipeController {
     return this.recipeService.remove(id);
   }
 
-  @Get('user/:clerkId')
+  @Get('/user/:username')
   @ApiOperation({ summary: 'Obtener recetas de un usuario' })
   @ApiResponse({
     status: 200,
     description: 'Lista de recetas del usuario obtenida exitosamente',
   })
   async getRecipesByUser(
-    @Param('clerkId') clerkId: string,
+    @Param('username') username: string,
     @Query('limit') limit?: string,
     @Query('cursor') cursorId?: string,
   ) {
     const parsedLimit = Math.min(Number(limit) || 10, 50);
-    return this.recipeService.getRecipesByUser(clerkId, parsedLimit, cursorId);
+    return this.recipeService.getRecipesByUsername(
+      username,
+      parsedLimit,
+      cursorId,
+    );
   }
 }

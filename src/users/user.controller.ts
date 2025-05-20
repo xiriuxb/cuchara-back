@@ -1,4 +1,4 @@
-import { Controller, Get, Request, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Request, Body, Patch, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateBioDto } from './dto/update-bio.dto';
 
@@ -14,5 +14,10 @@ export class UserController {
   @Patch('bio')
   async updateBio(@Request() req, @Body() updateBioDto: UpdateBioDto) {
     return await this._userService.updateBio(req.userId!, updateBioDto.bio);
+  }
+
+  @Get(':username')
+  async getUserData(@Param('username') username: string) {
+    return await this._userService.getUserData(username);
   }
 }

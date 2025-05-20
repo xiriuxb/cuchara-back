@@ -168,14 +168,8 @@ export class RecipeService {
     return this.recipeModel.findByIdAndDelete(id).exec();
   }
 
-  async getRecipesByUser(clerkId: string, limit = 10, cursorId?: string) {
+  private getPaginationPipeline(limit: number, cursorId?: string) {
     const pipeline: any[] = [];
-
-    pipeline.push({
-      $match: {
-        createdBy: clerkId,
-      },
-    });
 
     if (cursorId) {
       pipeline.push({
@@ -186,16 +180,58 @@ export class RecipeService {
     }
 
     pipeline.push({ $sort: { _id: -1 } });
-
     pipeline.push({ $limit: limit });
 
-    pipeline.push({
+    return pipeline;
+  }
+
+  private getBasicProjection() {
+    return {
       $project: {
         _id: 1,
         name: 1,
         url: 1,
       },
-    });
+    };
+  }
+
+  async getRecipesByUser(clerkId: string, limit = 10, cursorId?: string) {
+    const pipeline: any[] = [
+      {
+        $match: {
+          createdBy: clerkId,
+        },
+      },
+      ...this.getPaginationPipeline(limit, cursorId),
+      this.getBasicProjection(),
+    ];
+
+    const recipes = await this.recipeModel.aggregate(pipeline).exec();
+
+    return {
+      data: recipes,
+      nextCursor: recipes.length > 0 ? recipes[recipes.length - 1]._id : null,
+    };
+  }
+
+  async getRecipesByUsername(username: string, limit = 10, cursorId?: string) {
+    const pipeline: any[] = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: 'clerkId',
+          as: 'userData',
+        },
+      },
+      {
+        $match: {
+          'userData.username': username,
+        },
+      },
+      ...this.getPaginationPipeline(limit, cursorId),
+      this.getBasicProjection(),
+    ];
 
     const recipes = await this.recipeModel.aggregate(pipeline).exec();
 

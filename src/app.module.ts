@@ -14,11 +14,19 @@ import { UserController } from './users/user.controller';
 import { FeedModule } from './feed/feed.module';
 import { FollowModule } from './follows/follow.module';
 import { FollowController } from './follows/follow.controller';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 10,
+      },
+    ]),
     AuthModule,
     IngredientsModule,
     RecipeModule,
@@ -28,7 +36,13 @@ import { FollowController } from './follows/follow.controller';
     FollowModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

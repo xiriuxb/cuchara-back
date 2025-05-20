@@ -10,16 +10,19 @@ import { RecipeModule } from './recipe/recipe.module';
 import { RecipeController } from './recipe/recipe.controller';
 import { ClerkModule } from './clerk/clerk.module';
 import { UserModule } from './users/user.module';
+import { UserController } from './users/user.controller';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal:true}),
+    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     AuthModule,
     IngredientsModule,
     RecipeModule,
     ClerkModule,
     UserModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -28,6 +31,6 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes('auth/*', 'ingredients/*', RecipeController);
+      .forRoutes('auth/*', 'ingredients/*', RecipeController, UserController);
   }
 }

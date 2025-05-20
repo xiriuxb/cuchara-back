@@ -12,7 +12,9 @@ export class AuthMiddleware implements NestMiddleware {
         return res.status(401).json({ message: 'No token provided' });
       }
 
-      const payload = await verifyToken(token, {issuer: process.env.CLERK_JWT_ISSUER!,});
+      const payload = await verifyToken(token, {
+        issuer: process.env.CLERK_JWT_ISSUER!,
+      });
       req['userId'] = payload.sub;
 
       next();

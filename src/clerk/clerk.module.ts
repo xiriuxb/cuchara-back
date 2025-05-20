@@ -4,6 +4,6 @@ import { UserModule } from 'src/users/user.module';
 
 @Module({
   controllers: [ClerkWebhookController],
-  imports: [UserModule]
+  imports: [UserModule],
 })
 export class ClerkModule {}

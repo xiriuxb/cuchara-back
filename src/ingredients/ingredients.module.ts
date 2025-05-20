@@ -14,4 +14,4 @@ import { Ingredient, IngredientSchema } from './schemas/ingredient.schema';
   providers: [IngredientsService],
   exports: [IngredientsService],
 })
-export class IngredientsModule {} 
+export class IngredientsModule {}

@@ -35,7 +35,10 @@ class IngredientDto {
   @Min(1)
   unit: number;
 
-  @ApiProperty({ description: 'ID del ingrediente (opcional)', required: false })
+  @ApiProperty({
+    description: 'ID del ingrediente (opcional)',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   @IsMongoId()
@@ -80,10 +83,9 @@ export class CreateRecipeDto {
 
   @ApiProperty({ description: 'Lista de ingredientes' })
   @IsString()
-  @Type(()=>String)
+  @Type(() => String)
   ingredients: string;
 }
-
 
 export class ParsedCreateRecipeDto {
   @ApiProperty({ description: 'Nombre de la receta' })

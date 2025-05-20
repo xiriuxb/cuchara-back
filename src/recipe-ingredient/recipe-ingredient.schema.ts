@@ -18,4 +18,5 @@ export class RecipeIngredient {
   unit: number;
 }
 
-export const RecipeIngredientSchema = SchemaFactory.createForClass(RecipeIngredient);
+export const RecipeIngredientSchema =
+  SchemaFactory.createForClass(RecipeIngredient);

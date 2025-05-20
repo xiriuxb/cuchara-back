@@ -17,11 +17,15 @@ export class Ingredient extends Document {
   @Prop({ type: String, required: false })
   owner?: string;
 
-  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  @Prop({
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  })
   status: IngredientStatus;
 
   @Prop()
   reviewComment?: string;
 }
 
-export const IngredientSchema = SchemaFactory.createForClass(Ingredient); 
+export const IngredientSchema = SchemaFactory.createForClass(Ingredient);

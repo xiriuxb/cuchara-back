@@ -8,7 +8,7 @@ export class AuthController {
   testAuth(@Request() req) {
     return {
       message: 'Autenticación exitosa',
-      userId: req['userId']
+      userId: req['userId'],
     };
   }
-} 
+}

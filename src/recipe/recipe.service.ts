@@ -6,18 +6,25 @@ import { IngredientsService } from 'src/ingredients/ingredients.service';
 
 import { ParsedCreateRecipeDto } from './dto/recipe-create.dto';
 import { Recipe, RecipeDocument } from './recipe.schema';
-import { RecipeIngredient, RecipeIngredientDocument } from 'src/recipe-ingredient/recipe-ingredient.schema';
+import {
+  RecipeIngredient,
+  RecipeIngredientDocument,
+} from 'src/recipe-ingredient/recipe-ingredient.schema';
 
 @Injectable()
 export class RecipeService {
   constructor(
     @InjectModel(Recipe.name) private recipeModel: Model<RecipeDocument>,
-    @InjectModel(RecipeIngredient.name) private recipeIngredientModel: Model<RecipeIngredientDocument>,
+    @InjectModel(RecipeIngredient.name)
+    private recipeIngredientModel: Model<RecipeIngredientDocument>,
     private ingredientsService: IngredientsService,
     private uploadService: UploadService,
   ) {}
 
-  async createRecipe(data: ParsedCreateRecipeDto, userId: string): Promise<RecipeDocument> {
+  async createRecipe(
+    data: ParsedCreateRecipeDto,
+    userId: string,
+  ): Promise<RecipeDocument> {
     let imageUrl = '';
     if (data.image) {
       const uploadResult = await this.uploadService.uploadFile(data.image);
@@ -42,9 +49,14 @@ export class RecipeService {
     for (const ing of data.ingredients) {
       let ingredient;
       if (ing.id) {
-        ingredient = await this.ingredientsService.selectExistingIngredient(ing.id);
+        ingredient = await this.ingredientsService.selectExistingIngredient(
+          ing.id,
+        );
       } else if (ing.name) {
-        ingredient = await this.ingredientsService.createCustomOrReturnExistent({name: ing.name}, userId)
+        ingredient = await this.ingredientsService.createCustomOrReturnExistent(
+          { name: ing.name },
+          userId,
+        );
       } else {
         throw new Error('Ingrediente inválido: debe tener id o name');
       }
@@ -70,14 +82,126 @@ export class RecipeService {
   }
 
   async findOne(id: string) {
-    return this.recipeModel.findById(id).exec();
+    const pipeline = [
+      {
+        $match: {
+          _id: new Types.ObjectId(id),
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: 'clerkId',
+          as: 'userData',
+        },
+      },
+      {
+        $lookup: {
+          from: 'recipeingredients',
+          localField: '_id',
+          foreignField: 'recipeId',
+          as: 'recipeIngredients',
+        },
+      },
+      {
+        $lookup: {
+          from: 'ingredients',
+          localField: 'recipeIngredients.ingredientId',
+          foreignField: '_id',
+          as: 'ingredientsData',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          portions: 1,
+          minutes: 1,
+          dificulty: 1,
+          process: 1,
+          url: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          username: { $arrayElemAt: ['$userData.username', 0] },
+          ingredients: {
+            $map: {
+              input: '$recipeIngredients',
+              as: 'ri',
+              in: {
+                $mergeObjects: [
+                  '$$ri',
+                  {
+                    ingredient: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$ingredientsData',
+                            as: 'ing',
+                            cond: { $eq: ['$$ing._id', '$$ri.ingredientId'] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    const [recipe] = await this.recipeModel.aggregate(pipeline).exec();
+    return recipe;
   }
 
   async update(id: string, updateRecipeDto: any) {
-    return this.recipeModel.findByIdAndUpdate(id, updateRecipeDto, { new: true }).exec();
+    return this.recipeModel
+      .findByIdAndUpdate(id, updateRecipeDto, { new: true })
+      .exec();
   }
 
   async remove(id: string) {
     return this.recipeModel.findByIdAndDelete(id).exec();
+  }
+
+  async getRecipesByUser(clerkId: string, limit = 10, cursorId?: string) {
+    const pipeline: any[] = [];
+
+    pipeline.push({
+      $match: {
+        createdBy: clerkId,
+      },
+    });
+
+    if (cursorId) {
+      pipeline.push({
+        $match: {
+          _id: { $lt: new Types.ObjectId(cursorId) },
+        },
+      });
+    }
+
+    pipeline.push({ $sort: { _id: -1 } });
+
+    pipeline.push({ $limit: limit });
+
+    pipeline.push({
+      $project: {
+        _id: 1,
+        name: 1,
+        url: 1,
+      },
+    });
+
+    const recipes = await this.recipeModel.aggregate(pipeline).exec();
+
+    return {
+      data: recipes,
+      nextCursor: recipes.length > 0 ? recipes[recipes.length - 1]._id : null,
+    };
   }
 }

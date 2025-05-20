@@ -10,6 +10,7 @@ import {
   UploadedFile,
   Request,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -49,12 +50,17 @@ export class RecipeController {
     try {
       ingredientsP = JSON.parse(createRecipeDto.ingredients);
     } catch (e) {
+      console.log(e);
       throw new BadRequestException(
         'Invalid ingredients format. Expected JSON string',
       );
     }
 
-    const ingredientsInstances = plainToInstance(CreateIngredientDto, ingredientsP, {enableImplicitConversion:true});
+    const ingredientsInstances = plainToInstance(
+      CreateIngredientDto,
+      ingredientsP,
+      { enableImplicitConversion: true },
+    );
     const errors = ingredientsInstances.flatMap((ingredient) =>
       validateSync(ingredient),
     );
@@ -80,6 +86,25 @@ export class RecipeController {
     return this.recipeService.findAll();
   }
 
+  @Get('/my')
+  @ApiOperation({ summary: 'Obtener recetas de un usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de recetas del usuario obtenida exitosamente',
+  })
+  async getMyRecipes(
+    @Request() req,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursorId?: string,
+  ) {
+    const parsedLimit = Math.min(Number(limit) || 10, 50);
+    return this.recipeService.getRecipesByUser(
+      req.userId,
+      parsedLimit,
+      cursorId,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener una receta por ID' })
   @ApiResponse({ status: 200, description: 'Receta encontrada' })
@@ -102,5 +127,20 @@ export class RecipeController {
   @ApiResponse({ status: 404, description: 'Receta no encontrada' })
   remove(@Param('id') id: string) {
     return this.recipeService.remove(id);
+  }
+
+  @Get('user/:clerkId')
+  @ApiOperation({ summary: 'Obtener recetas de un usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de recetas del usuario obtenida exitosamente',
+  })
+  async getRecipesByUser(
+    @Param('clerkId') clerkId: string,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursorId?: string,
+  ) {
+    const parsedLimit = Math.min(Number(limit) || 10, 50);
+    return this.recipeService.getRecipesByUser(clerkId, parsedLimit, cursorId);
   }
 }

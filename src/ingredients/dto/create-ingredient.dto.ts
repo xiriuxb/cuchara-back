@@ -13,17 +13,17 @@ export class CreateIngredientDto {
   @IsString()
   @IsOptional()
   imageUrl?: string;
-} 
+}
 
 export class CreateCustomIngredientDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-} 
+}
 
 export class StoreIngredientDto {
   name: string;
   description?: string;
   imageUrl?: string;
-  status: IngredientStatus
+  status: IngredientStatus;
 }

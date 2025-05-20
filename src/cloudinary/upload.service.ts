@@ -13,21 +13,24 @@ export class UploadService {
     return new Promise((resolve, reject) => {
       const fileType = file.mimetype.split('/')[0];
       const extension = file.originalname.split('.').pop().toLowerCase();
-      
+
       let resourceType: 'image' | 'video' | 'raw';
       if (fileType === 'video') {
         resourceType = 'video';
-        if (file.size > 100 * 1024 * 1024) { // 100MB
+        if (file.size > 100 * 1024 * 1024) {
+          // 100MB
           return reject(new Error('El video excede el límite de 100MB'));
         }
       } else if (extension === 'pdf') {
         resourceType = 'raw';
-        if (file.size > 10 * 1024 * 1024) { // 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB
           return reject(new Error('El archivo excede el límite de 10MB'));
         }
       } else {
         resourceType = 'image';
-        if (file.size > 10 * 1024 * 1024) { // 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB
           return reject(new Error('La imagen excede el límite de 10MB'));
         }
       }

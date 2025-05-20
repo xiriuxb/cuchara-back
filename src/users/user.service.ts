@@ -139,7 +139,7 @@ export class UserService {
   }
 
   private async generateUsername(email: string) {
-    const { nanoid } = await import('nanoid/non-secure');
+    const { nanoid } = await import('nanoid');
     const localPart = email.split('@')[0];
     const base = localPart.toLowerCase().replace(/[^a-z0-9]/g, '');
 

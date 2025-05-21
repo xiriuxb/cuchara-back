@@ -195,20 +195,29 @@ export class RecipeService {
   }
 
   private getBasicProjection() {
-    return {
-      $lookup: {
-        from: 'likes',
-        localField: '_id',
-        foreignField: 'recipe',
-        as: 'likes',
+    return [
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'recipe',
+          as: 'likes',
+        },
       },
-      $project: {
-        _id: 1,
-        name: 1,
-        url: 1,
-        likesCount: { $size: '$likes' },
+      {
+        $addFields: {
+          likesCount: { $size: '$likes' },
+        },
       },
-    };
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          url: 1,
+          likesCount: 1,
+        },
+      },
+    ];
   }
 
   async getRecipesByUser(clerkId: string, limit = 10, cursorId?: string) {
@@ -219,7 +228,7 @@ export class RecipeService {
         },
       },
       ...this.getPaginationPipeline(limit, cursorId),
-      this.getBasicProjection(),
+      ...this.getBasicProjection(),
     ];
 
     const recipes = await this.recipeModel.aggregate(pipeline).exec();
@@ -246,7 +255,7 @@ export class RecipeService {
         },
       },
       ...this.getPaginationPipeline(limit, cursorId),
-      this.getBasicProjection(),
+      ...this.getBasicProjection(),
     ];
 
     const recipes = await this.recipeModel.aggregate(pipeline).exec();

@@ -34,8 +34,18 @@ export class FeedService {
     });
 
     pipeline.push({
+      $lookup: {
+        from: 'likes',
+        localField: '_id',
+        foreignField: 'recipe',
+        as: 'likes',
+      },
+    });
+
+    pipeline.push({
       $addFields: {
         username: { $arrayElemAt: ['$userData.username', 0] },
+        likesCount: { $size: '$likes' },
       },
     });
 
@@ -46,7 +56,8 @@ export class FeedService {
         description: 1,
         createdAt: 1,
         url: 1,
-        username: { $arrayElemAt: ['$userData.username', 0] },
+        username: 1,
+        likesCount: 1,
       },
     });
 

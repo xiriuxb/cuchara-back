@@ -18,6 +18,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/comment.controller';
+import { LikesController } from './likes/like.controller';
+import { LikesModule } from './likes/like.module';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { CommentController } from './comment/comment.controller';
     FeedModule,
     FollowModule,
     CommentModule,
+    LikesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -58,6 +61,7 @@ export class AppModule implements NestModule {
         UserController,
         FollowController,
         CommentController,
+        LikesController,
       );
   }
 }

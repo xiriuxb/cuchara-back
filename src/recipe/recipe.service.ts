@@ -113,6 +113,14 @@ export class RecipeService {
         },
       },
       {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'recipe',
+          as: 'likes',
+        },
+      },
+      {
         $project: {
           _id: 1,
           name: 1,
@@ -125,6 +133,7 @@ export class RecipeService {
           createdAt: 1,
           updatedAt: 1,
           username: { $arrayElemAt: ['$userData.username', 0] },
+          likesCount: { $size: '$likes' },
           ingredients: {
             $map: {
               input: '$recipeIngredients',
@@ -187,10 +196,17 @@ export class RecipeService {
 
   private getBasicProjection() {
     return {
+      $lookup: {
+        from: 'likes',
+        localField: '_id',
+        foreignField: 'recipe',
+        as: 'likes',
+      },
       $project: {
         _id: 1,
         name: 1,
         url: 1,
+        likesCount: { $size: '$likes' },
       },
     };
   }

@@ -46,6 +46,12 @@ export class RecipeController {
     image: Express.Multer.File,
     @Request() req,
   ) {
+    if (image) {
+      const isValid = /^image\/(jpeg|jpg|png|webp)$/.test(image.mimetype);
+      if (!isValid) {
+        throw new BadRequestException(`Invalid file type: ${image.mimetype}`);
+      }
+    }
     let ingredientsP = [];
     try {
       ingredientsP = JSON.parse(createRecipeDto.ingredients);
